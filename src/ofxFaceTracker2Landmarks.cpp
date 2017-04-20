@@ -2,6 +2,7 @@
 
 
 ofxFaceTracker2Landmarks::ofxFaceTracker2Landmarks(dlib::full_object_detection shape, ofxFaceTracker2InputInfo & info) : shape(shape), info(info){
+    
 }
 
 
@@ -24,6 +25,22 @@ vector<ofVec2f> ofxFaceTracker2Landmarks::getImagePoints() const {
     return imagePoints;
 }
 
+//Test method to avoid points 60 and 64
+vector<ofVec2f> ofxFaceTracker2Landmarks::getImagePointsMod() const {
+    int n = shape.num_parts();
+    vector<ofVec2f> imagePoints(n-2);
+    int cont = 0;
+    for(int i = 0; i < n; i++) {
+        if (i != 60 || i != 64) {
+            
+        } else {
+            imagePoints[cont] = getImagePoint(i);
+            cont++;
+        }
+    }
+    return imagePoints;
+}
+
 vector<cv::Point2f> ofxFaceTracker2Landmarks::getCvImagePoints() const {
     int n = shape.num_parts();
     vector<cv::Point2f> imagePoints(n);
@@ -40,7 +57,12 @@ ofPolyline ofxFaceTracker2Landmarks::getImageFeature(Feature feature) const {
 }
 
 ofMesh ofxFaceTracker2Landmarks::getImageMesh() const{
-    return getMesh(getCvImagePoints());
+    //return getMesh(getCvImagePoints()); // <-- the original return
+
+    /*NEED TO WORK OVER getMeshFromImagePoint() and addTriangleIndices()
+     tofix the mesh problem, by the time being is using the actual getMesh function 
+     */
+    return getMeshFromImagePoint(getImagePoints());//getMesh(getImagePoints());
 }
 
 
@@ -99,6 +121,53 @@ vector<int> ofxFaceTracker2Landmarks::consecutive(int start, int end) {
     }
     return result;
 }
+
+//getMesh method as in ofxFaceTracker (previous version of face tracker)
+template <class T>
+ofMesh ofxFaceTracker2Landmarks::getMeshFromImagePoint(vector<T> points) const {
+    ofMesh mesh;
+    mesh.setMode(OF_PRIMITIVE_TRIANGLES);
+    if(true) {
+        int n = points.size();
+        for(int i = 0; i < n; i++) {
+            //ofLog(OF_LOG_NOTICE, "points["+ofToString(i)+"]: " + ofToString(points[i]));
+            
+            
+            mesh.addVertex(points[i]);
+            mesh.addTexCoord(getImagePoint(i));
+        }
+        addTriangleIndices(mesh);
+    }
+    return mesh;
+}
+
+//TODO: Set this method right!!!!!  
+//addTriangleIndices method as in ofxFaceTracker (previous version of face tracker)
+void ofxFaceTracker2Landmarks::addTriangleIndices(ofMesh& mesh) const {
+    /* This comment is the version from ofxFaceTracker
+    int in = tri.rows;
+    for(int i = 0; i < tri.rows; i++) {
+        int i0 = tri.it(i, 0), i1 = tri.it(i, 1), i2 = tri.it(i, 2);
+        bool visible = getVisibility(i0) && getVisibility(i1) && getVisibility(i2);
+        if(useInvisible || visible) {
+            mesh.addIndex(i0);
+            mesh.addIndex(i1);
+            mesh.addIndex(i2);
+        }
+    }
+     */
+    
+    //This is the new version using directly a two dimensional array defined in the .h file. The array represents the x,y,z positions of the mesh used as mask
+    for(int i = 0; i < faceTriCols; i++) { //why this faceTri[0].size() doesnt works?
+        int i0 = faceTri[0][i], i1 = faceTri[1][i], i2 = faceTri[2][i];
+        if(true) { // getVisible?? is not part of faceTracker2, so is ignored, is too bad???
+            mesh.addIndex(i0);
+            mesh.addIndex(i1);
+            mesh.addIndex(i2);
+        }
+    }
+}
+
 
 template <class T>
 ofMesh ofxFaceTracker2Landmarks::getMesh(vector<T> points) const {

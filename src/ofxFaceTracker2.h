@@ -70,6 +70,8 @@ public:
     /// Set weather the tracker should run threaded or not
     void setThreaded(bool threaded);
     
+    //http://duramecho.com/ComputerInformation/WhyHowCppConst.html
+    //A constante holding the instances, and  ban getInstances() from being anything which can attempt to alter any member variables in the object.
     const vector<ofxFaceTracker2Instance> & getInstances() const;
     vector<ofxFaceTracker2Instance> & getInstances();
     
