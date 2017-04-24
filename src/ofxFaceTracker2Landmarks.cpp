@@ -1,8 +1,20 @@
 #include "ofxFaceTracker2Landmarks.h"
+#define it at<int>
+#define db at<double>
 
 
 ofxFaceTracker2Landmarks::ofxFaceTracker2Landmarks(dlib::full_object_detection shape, ofxFaceTracker2InputInfo & info) : shape(shape), info(info){
     
+    #ifdef DEBUG
+    if(!ofFile("model/face.tri").exists()) {
+        ofLogError() << "Make sure you've placed the files face2.tracker, face.tri and face.con in the data/model/ folder.";
+        ofExit();
+    }
+    
+    string triFile = ofToDataPath("model/face.tri");
+    
+    tri = LoadTri(triFile.c_str());
+#endif
 }
 
 
@@ -158,14 +170,38 @@ void ofxFaceTracker2Landmarks::addTriangleIndices(ofMesh& mesh) const {
      */
     
     //This is the new version using directly a two dimensional array defined in the .h file. The array represents the x,y,z positions of the mesh used as mask
-    for(int i = 0; i < faceTriCols; i++) { //why this faceTri[0].size() doesnt works?
+#ifdef DEBUG
+    printf("----------------------------------\n");
+    printf("----------------------------------\n");
+    for(int i = 0; i < tri.rows; i++) {
+        printf("%i , ", tri.it(i, 0) );
+    }
+    printf("\n----------------------------------\n");
+    for(int i = 0; i < tri.rows; i++) {
+        printf("%i , ", tri.it(i, 1) );
+    }
+    printf("\n----------------------------------\n");
+    for(int i = 0; i < tri.rows; i++) {
+        printf("%i , ", tri.it(i, 2) );
+    }
+    printf("\n----------------------------------\n");
+    for(int i = 0; i < tri.rows; i++) { //why this faceTri[0].size() doesnt works?
+        int i0 = tri.it(i, 0), i1 = tri.it(i, 1), i2 = tri.it(i, 2);
+#else
+    for(int i = 0 ; i < faceTriCols ;i++){
         int i0 = faceTri[0][i], i1 = faceTri[1][i], i2 = faceTri[2][i];
+#endif
+        
+        printf("%i %i %i \n", i0, i1, i2);
         if(true) { // getVisible?? is not part of faceTracker2, so is ignored, is too bad???
             mesh.addIndex(i0);
             mesh.addIndex(i1);
             mesh.addIndex(i2);
         }
     }
+#ifdef DEBUG
+    printf("----------------------------------\n");
+#endif
 }
 
 
@@ -206,3 +242,21 @@ ofMesh ofxFaceTracker2Landmarks::getMesh(vector<T> points) const {
     
 }
 
+//=============================================================================
+#ifdef DEBUG
+cv::Mat ofxFaceTracker2Landmarks::LoadTri(const char* fname)
+{
+    int i,n; char str[256]; char c; fstream file(fname,fstream::in);
+    if(!file.is_open()){
+        printf("ERROR(%s,%d) : Failed opening file %s for reading\n",
+               __FILE__,__LINE__,fname); abort();
+    }
+    while(1){file >> str; if(strncmp(str,"n_tri:",6) == 0)break;}
+    file >> n; cv::Mat tri(n,3,CV_32S);
+    while(1){file >> c; if(c == '{')break;}
+    for(i = 0; i < n; i++)
+        file >> tri.at<int>(i,0) >> tri.at<int>(i,1) >> tri.at<int>(i,2);
+    file.close(); return tri;
+}
+
+#endif
