@@ -188,12 +188,13 @@ void ofxFaceTracker2Landmarks::addTriangleIndices(ofMesh& mesh) const {
     printf("\n----------------------------------\n");
     for(int i = 0; i < tri.rows; i++) { //why this faceTri[0].size() doesnt works?
         int i0 = tri.it(i, 0), i1 = tri.it(i, 1), i2 = tri.it(i, 2);
+        printf("%i %i %i \n", i0, i1, i2);
 #else
     for(int i = 0 ; i < faceTriCols ;i++){
         int i0 = faceTri[0][i], i1 = faceTri[1][i], i2 = faceTri[2][i];
 #endif
         
-        printf("%i %i %i \n", i0, i1, i2);
+        
         if(true) { // getVisible?? is not part of faceTracker2, so is ignored, is too bad???
             mesh.addIndex(i0);
             mesh.addIndex(i1);
